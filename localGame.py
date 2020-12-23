@@ -59,7 +59,7 @@ while not b.is_game_over():
     nextplayer = otherplayer
     nextplayercolor = othercolor
 
-print("The game is over")
+print("\nThe game is over")
 b.prettyPrint()
 result = b.result()
 print("Time:", totalTime)
