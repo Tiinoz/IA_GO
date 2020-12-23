@@ -22,7 +22,6 @@ class myPlayer(PlayerInterface):
     def __init__(self):
         self._board = Goban.Board()
         self._mycolor = None
-        self._nbmoves = 0 
 
     # ALPHA BETA TEST
 
