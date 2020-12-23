@@ -16,7 +16,9 @@ if len(sys.argv) > 2:
 elif len(sys.argv) > 1:
     classNames = [fileorpackage(sys.argv[1]), 'myPlayer']
 else:
-    classNames = ['myPlayer', 'myPlayer']
+    # classNames = ['myPlayer', 'myPlayer']
+    classNames = ['myPlayer', 'randomPlayer']
+
 
 b = Goban.Board()
 
