@@ -163,15 +163,14 @@ class myPlayer(PlayerInterface):
                 coup = [m]
             self._board.pop()
         return coup
+
     # ******************
+
     def getPlayerName(self):
-        if self._mycolor == self._board._BLACK:
-            return "Lucas trop nul au GO"
-        else:
-            return "Enzo le pro du GO"
+        return "LaHonteDeLaPromo"
 
     def getPlayerMove(self):
-        sys.stdout = sys.__stdout__
+        # sys.stdout = sys.__stdout__
         self._time = time.time() - self._time
         if self._board.is_game_over():
             print("Referee told me to play but the game is over!")
