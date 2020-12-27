@@ -38,15 +38,16 @@ class myPlayer(PlayerInterface):
         self._1openerMove = ["C7","C6","D7"]
         self._2openerMove = ["G7","G6","F7"]
         self._3openerMove = ["C3","C4","D3"]
-        self._4openerMove = ["G3","G4","F3"]        
+        self._4openerMove = ["G3","G4","F3"]      
+        # Liste des coins  
         self._corners = ["A1","J1","A9","J9"]
         self._cornersMove = [0,8,72,80]
-
+        # Liste des positions des bordures
         self._outlines = ["A1","A2","A3","A4","A5","A6","A7","A8","A9","B1","C1","D1","E1","F1","G1","H1","J1","B9","C9","D9","E9","F9","H9","G9","J9","J2","J3","J4","J5","J6","J7","J8"]
         self._nbmoves = 0
         self._coeff = 3
         
-
+    # Si le jeu est terminé, on met la valeur de l'heuristique ou gagnant
     def scoreIsOver(self):
         board_value = 0
         if self._board.is_game_over():
@@ -64,6 +65,7 @@ class myPlayer(PlayerInterface):
                 board_value = 0
             return board_value
 
+    #Petite heuristique qui compte le nombre de pièce et de territoire
     def getBoardScore(self):
         black, white = self._board.compute_score()
         if self._mycolor == self._board._WHITE:
@@ -71,6 +73,8 @@ class myPlayer(PlayerInterface):
         elif self._mycolor == self._board._BLACK:
             return black
 
+    # Permet de selectionner des moves qui ont des voisins parmis la liste des meilleurs possibilités renvoyées par AlphaBeta
+    # On prend des positions qui ont des voisins de notre couleur afin qu'il est plus d'impact
     def choiceGo(self, moves):
         move = -1
         max = 0
@@ -99,8 +103,10 @@ class myPlayer(PlayerInterface):
                 print("No more time")
                 break
             mStr = self._board.move_to_str(m)
+            # Si le move correspond a un coin on le passe
             if (mStr in self._corners and self._cornersMove != self._board.generate_legal_moves()):
                 continue
+            # On a décidé d'éviter de jouer les bords pendant les 10 premiers cours
             if(self._nbmoves < 10 and mStr in self._outlines):
                 continue
             self._board.push(m)
@@ -125,8 +131,10 @@ class myPlayer(PlayerInterface):
                 print("No more time")
                 break
             mStr = self._board.move_to_str(m)
+            # Si le move correspond a un coin on le passe
             if (mStr in self._corners and self._cornersMove != self._board.generate_legal_moves()):
                 continue
+            # On a décidé d'éviter de jouer les bords pendant les 10 premiers cours
             if(self._nbmoves < 10 and mStr in self._outlines):
                 continue
             self._board.push(m)
@@ -143,15 +151,16 @@ class myPlayer(PlayerInterface):
         coup = []
         moves = self._board.generate_legal_moves()
         random.shuffle(moves)
-
         for m in moves:
             self._time = time.time() - self._launchTime 
             if(self._maxTime - self._time <= 1):
                 print("No more time")
                 break
             mStr = self._board.move_to_str(m)
+            # Si le move correspond a un coin on le passe
             if (mStr in self._corners and self._cornersMove != self._board.generate_legal_moves()):
                 continue
+            # On a décidé d'éviter de jouer les bords pendant les 10 premiers cours
             if(self._nbmoves < 10 and mStr in self._outlines):
                 continue
             self._board.push(m)
@@ -170,19 +179,22 @@ class myPlayer(PlayerInterface):
         return "LaHonteDeLaPromo"
 
     def getPlayerMove(self):
-        # sys.stdout = sys.__stdout__
-        self._time = time.time() - self._time
+        # Permet depuis combien de temps notre joueur joue
+        self._time = time.time() - self._launchTime 
         if self._board.is_game_over():
             print("Referee told me to play but the game is over!")
             return "PASS" 
         moves = self._board.legal_moves() # Dont use weak_legal_moves() here!
+        # Si il reste peu de possibilités on augmente la depth pour avoir quelque chose de plus précis
         if len(moves) < 11:
             self._coeff = 6
         else:
             self.coeff = 3
+        # Si 1 move on le donne direct
         if len(moves) == 1:
             print("Only one move possibility\n")
             move = moves[0]
+        # Les 4 premiers moves sont imposés
         elif self._1Move:
             print("First Move")
             move = self._board.str_to_move(choice(self._1openerMove))
@@ -207,18 +219,21 @@ class myPlayer(PlayerInterface):
             while(move not in moves):
                 move = self._board.str_to_move(choice(self._4openerMove))
             self._4Move = False
+        # Check si on est a moins de 1 secondes des 3 minutes, si c'est le cas on joue en random pour pas dépasser 3minutes
         elif(self._maxTime - self._time <= 1):
             move = choice(moves) 
-        else:
+        else: 
             print(self._time)
             print("AlphaBeta Move")
             moves = self.AlphaBeta(self._coeff)
             if(len(moves)>0):
                 move = self.choiceGo(moves)
+            # Si pas de move -1 pas gérer dans le choiceGo()
             else:
                 move = random.choice(moves)
         self._board.push(move)
         self._nbmoves += 1;
+
         # New here: allows to consider internal representations of moves
         print("I am playing ", self._board.move_to_str(move))
         print("My current board :")
@@ -234,6 +249,7 @@ class myPlayer(PlayerInterface):
     def newGame(self, color):
         self._mycolor = color
         self._opponent = Goban.Board.flip(color)
+        # Initialisation du temps au moment de création de la partie
         self._launchTime = time.time()
 
     def endGame(self, winner):
