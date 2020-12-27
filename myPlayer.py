@@ -55,7 +55,7 @@ class myPlayer(PlayerInterface):
         else:
             return self._board._BLACK
 
-    def heuristicOver(self):
+    def scoreIsOver(self):
         board_value = 0
         if self._board.is_game_over():
             if self._board.result() == "1-0":
@@ -96,7 +96,7 @@ class myPlayer(PlayerInterface):
 
     def MaxValue(self, alpha, beta, depth = 3):
         if self._board.is_game_over():
-            return self.heuristicOver()
+            return self.scoreIsOver()
         if depth == 0:
             return self.getBoardScore()
         moves = self._board.generate_legal_moves()
@@ -122,7 +122,7 @@ class myPlayer(PlayerInterface):
     
     def MinValue(self, alpha, beta, depth = 3):
         if self._board.is_game_over():
-            return self.heuristicOver()
+            return self.scoreIsOver()
         if depth == 0:
             return self.getBoardScore()
         moves = self._board.generate_legal_moves()
@@ -180,7 +180,7 @@ class myPlayer(PlayerInterface):
 
     def getPlayerMove(self):
         sys.stdout = sys.__stdout__
-        self._time = time.time() - self._launchTime 
+        self._time = time.time() - self._time
         if self._board.is_game_over():
             print("Referee told me to play but the game is over!")
             return "PASS" 
@@ -222,8 +222,10 @@ class myPlayer(PlayerInterface):
             print(self._time)
             print("AlphaBeta")
             moves = self.AlphaBeta(self._coeff)
-            move = self.choiceGo(moves)
-            # move = self.AlphaBeta()
+            if(len(moves)>0):
+                move = self.choiceGo(moves)
+            else:
+                move = random.choice(moves)
         if(self._maxTime - self._time <= 1):
             move = choice(moves) 
         self._board.push(move)
