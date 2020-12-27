@@ -79,11 +79,19 @@ class myPlayer(PlayerInterface):
         elif self._mycolor == self._board._BLACK:
             return black
 
-    def choice(self, moves):
+    def choiceGo(self, moves):
         move = -1
+        max = 0
+        list = []
         for m in moves:
-            self._board._get_neighbors(m)
-            
+            nb_v = 0
+            for v in self._board._get_neighbors(m):
+                if self._mycolor == self._board._board[v]:
+                    list.append(m)
+        if len(list) > 0:
+            move = random.choice(list)
+        if move == -1:
+            move = random.choice(moves)
         return move
 
     def MaxValue(self, alpha, beta, depth = 3):
@@ -214,7 +222,7 @@ class myPlayer(PlayerInterface):
             print(self._time)
             print("AlphaBeta")
             moves = self.AlphaBeta(self._coeff)
-            move = random.choice(moves)
+            move = self.choiceGo(moves)
             # move = self.AlphaBeta()
         if(self._maxTime - self._time <= 1):
             move = choice(moves) 
