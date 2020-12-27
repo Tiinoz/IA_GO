@@ -22,7 +22,7 @@ def deroulementRandom(b):
     b.pop()
 
 board = Goban.Board()
-# deroulementRandom(board)
+deroulementRandom(board)
 
 ''' Exemple de déroulement random avec weak_legal_moves()'''
 
@@ -33,7 +33,6 @@ def weakRandomMove(b):
     bien True et sinon, défaire immédiatement le coup par un pop() et essayer un autre coup.'''
     return choice(b.weak_legal_moves())
 
-
 def weakDeroulementRandom(b):
     '''Déroulement d'une partie de go au hasard des coups possibles. Cela va donner presque exclusivement
     des parties très longues. Cela illustre cependant comment on peut jouer avec la librairie
@@ -41,8 +40,8 @@ def weakDeroulementRandom(b):
     
     Ce petit exemple montre comment utiliser weak_legal_moves() plutot que legal_moves(). Vous y gagnerez en efficacité.'''
 
-    # print("----------")
-    # b.prettyPrint()
+    print("----------")
+    b.prettyPrint()
     if b.is_game_over():
         print("Resultat : ", b.result())
         return
@@ -57,9 +56,5 @@ def weakDeroulementRandom(b):
     weakDeroulementRandom(b)
     b.pop()
 
-t = time.time()
 board = Goban.Board()
-weakDeroulementRandom(board)
-timeFin = time.time()
-test = timeFin - t 
-print(test)
+deroulementRandom(board)

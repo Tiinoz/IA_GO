@@ -1,1 +1,0 @@
-Jouer autour des points d'intersections.
