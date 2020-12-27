@@ -11,7 +11,10 @@ from random import choice
 from playerInterface import *
 from math import inf
 import random
-import copy
+import sys
+
+MAX = 10000000
+MIN =-10000000
 
 class myPlayer(PlayerInterface):
     ''' Example of a random player for the go. The only tricky part is to be able to handle
@@ -23,112 +26,143 @@ class myPlayer(PlayerInterface):
     def __init__(self):
         self._board = Goban.Board()
         self._mycolor = None
+        self._bestMove = -1
         self._firstCoup = True
-        self._openerCoup = ["C7","G7","C3","G3"]
+        self._launchTime = 0
+        self._time = 0
+        self._maxTime = 300
+        self._1Move = True
+        self._2Move = True
+        self._3Move = True
+        self._4Move = True
+        self._1openerMove = ["C7","C6","D7"]
+        self._2openerMove = ["G7","G6","F7"]
+        self._3openerMove = ["C3","C4","D3"]
+        self._4openerMove = ["G3","G4","F3"]        
+        self._corners = ["A1","J1","A9","J9"]
+        self._cornersMove = [0,8,72,80]
+
+        self._outlines = ["A1","A2","A3","A4","A5","A6","A7","A8","A9","B1","C1","D1","E1","F1","G1","H1","J1","B9","C9","D9","E9","F9","H9","G9","J9","J2","J3","J4","J5","J6","J7","J8"]
+        self._nbmoves = 0
+        self._coeff = 3
         
 
 
     # ALPHA BETA TEST
+    def getOpponentColor(self):
+        if self._mycolor == self._board._BLACK:
+            return self._board._WHITE
+        else:
+            return self._board._BLACK
 
-    def heuristic(self, b):
+    def heuristicOver(self):
         board_value = 0
-        black, white = b.compute_score();
-        if b.is_game_over():  # y'a moy d'optimiser ça en recuperant la profondeur ou pas
-            if b.result() == "1-0":
-                board_value += white
-            elif b.result() == "0-1":
-                board_value -= black
+        if self._board.is_game_over():
+            if self._board.result() == "1-0":
+                if self._mycolor == self._board._WHITE:
+                    board_value = 500
+                else:
+                    board_value = -500
+            elif self._board.result() == "0-1":
+                if self._mycolor == self._board._BLACK:
+                    board_value = 500
+                else:
+                    board_value = -500
             else:
                 board_value = 0
             return board_value
 
-        return board_value  # + mobility
-    
-    def minimax_recAB(self, b, depth, white, alpha, beta):
-        if depth == 0 or b.is_game_over():
-            return self.heuristic(b)
+    def getBoardScore(self):
+        black, white = self._board.compute_score()
+        if self._mycolor == self._board._WHITE:
+            return white
+        elif self._mycolor == self._board._BLACK:
+            return black
 
-        to_ret = None
-        for i in b.generate_legal_moves():
+    def choice(self, moves):
+        move = -1
+        for m in moves:
+            self._board._get_neighbors(m)
             
-            eval = self.minimax_recAB(b, depth - 1, not white, alpha, beta)
-            eval -= 0.00000001 * (100 - depth)  # valeur un peu magique pour faire varier le poids des
-            b.pop()
-            if to_ret is None:
-                to_ret = eval
-            if white:
-                to_ret = max(to_ret, eval)
-                alpha = max(alpha, eval)
-                if alpha >= beta:
-                    break
-            else:
-                to_ret = min(to_ret, eval)
-                beta = min(beta, eval)
-                if alpha >= beta:
-                    break
+        return move
 
-        return to_ret
-
-    def minimaxAB(self, b, white):
-        bestValue = 0
-        bestMove = None
-        print("before J")
-
-        for i in b.generate_legal_moves():
-            boardCopy = copy.deepcopy(b)
-            boardCopy.push(i)
-            cpt = 0
-            print("before J")
-            for j in range (0, 10):
-                self.weakDeroulementRandom(boardCopy, self._mycolor, cpt)
-            print("after J")
-            cpt = cpt / 2
-            if bestValue < cpt:
-                bestValue = cpt
-                bestMove = i
-            boardCopy.pop()       
-        return bestMove
-
-
-
-        # ******************
-    def weakRandomMove(self,b):
-        '''Renvoie un mouvement au hasard sur la liste des mouvements possibles mais attention, dans ce cas
-        weak_legal_moves() peut renvoyer des coups qui entrainent des super ko. Si on prend un coup au hasard
-        il y a donc un risque qu'il ne soit pas légal. Du coup, il faudra surveiller si push() nous renvoie
-        bien True et sinon, défaire immédiatement le coup par un pop() et essayer un autre coup.'''
-        return choice(b.weak_legal_moves())
-
-
-    def weakDeroulementRandom(self, b, color, heuristic):
-        '''Déroulement d'une partie de go au hasard des coups possibles. Cela va donner presque exclusivement
-        des parties très longues. Cela illustre cependant comment on peut jouer avec la librairie
-        très simplement en utilisant les coups weak_legal_moves().
-        
-        Ce petit exemple montre comment utiliser weak_legal_moves() plutot que legal_moves(). Vous y gagnerez en efficacité.'''
-
-        # print("----------")
-        # b.prettyPrint()
-        
-        if b.is_game_over():
-            print("Resultat : ", b.result())
-            black, white = b.compute_score()
-            if color == b._BLACK:
-                heuristic += black
-            else:
-                heuristic += white
-            return
-
-        while True:
-            # push peut nous renvoyer faux si le coup demandé n'est pas valide à cause d'un superKo. Dans ce cas il faut
-            # faire un pop() avant de retenter un nouveau coup 
-            valid = b.push(self.weakRandomMove(b))
-            if valid:
+    def MaxValue(self, alpha, beta, depth = 3):
+        if self._board.is_game_over():
+            return self.heuristicOver()
+        if depth == 0:
+            return self.getBoardScore()
+        moves = self._board.generate_legal_moves()
+        random.shuffle(moves)
+        for m in moves:
+            self._time = time.time() - self._launchTime 
+            if(self._maxTime - self._time <= 1):
+                print("No more time")
                 break
-            b.pop()
-        self.weakDeroulementRandom(b,color,heuristic)
-        b.pop()
+            mStr = self._board.move_to_str(m)
+            if (mStr in self._corners and self._cornersMove != self._board.generate_legal_moves()):
+                continue
+            if(self._nbmoves < 10 and mStr in self._outlines):
+                continue
+            self._board.push(m)
+            v = self.MinValue(alpha,beta, depth - 1)
+            self._board.pop()
+            if v > alpha:
+                alpha = v
+            if alpha >= beta:
+                return beta
+        return alpha
+    
+    def MinValue(self, alpha, beta, depth = 3):
+        if self._board.is_game_over():
+            return self.heuristicOver()
+        if depth == 0:
+            return self.getBoardScore()
+        moves = self._board.generate_legal_moves()
+        random.shuffle(moves)
+        for m in moves:
+            self._time = time.time() - self._launchTime 
+            if(self._maxTime - self._time <= 1):
+                print("No more time")
+                break
+            mStr = self._board.move_to_str(m)
+            if (mStr in self._corners and self._cornersMove != self._board.generate_legal_moves()):
+                continue
+            if(self._nbmoves < 10 and mStr in self._outlines):
+                continue
+            self._board.push(m)
+            v = self.MaxValue(alpha,beta, depth - 1)
+            self._board.pop()
+            if v < beta:
+                beta = v
+            if alpha >= beta:
+                return alpha
+        return beta
 
+    def AlphaBeta(self, depth = 3):
+        alpha = MIN
+        coup = []
+        moves = self._board.generate_legal_moves()
+        random.shuffle(moves)
+
+        for m in moves:
+            self._time = time.time() - self._launchTime 
+            if(self._maxTime - self._time <= 1):
+                print("No more time")
+                break
+            mStr = self._board.move_to_str(m)
+            if (mStr in self._corners and self._cornersMove != self._board.generate_legal_moves()):
+                continue
+            if(self._nbmoves < 10 and mStr in self._outlines):
+                continue
+            self._board.push(m)
+            v = self.MinValue(alpha, MAX, depth - 1)
+            if v == alpha:
+                coup.append(m)
+            elif v > alpha or coup == None:
+                alpha = v
+                coup = [m]
+            self._board.pop()
+        return coup
     # ******************
     def getPlayerName(self):
         if self._mycolor == self._board._BLACK:
@@ -137,32 +171,55 @@ class myPlayer(PlayerInterface):
             return "EnzoBG le pro du GO"
 
     def getPlayerMove(self):
+        sys.stdout = sys.__stdout__
+        self._time = time.time() - self._launchTime 
         if self._board.is_game_over():
             print("Referee told me to play but the game is over!")
             return "PASS" 
         moves = self._board.legal_moves() # Dont use weak_legal_moves() here!
+        if len(moves) < 11:
+            self._coeff = 6
+        else:
+            self.coeff = 3
         if len(moves) == 1:
             print("Only one move possibility\n")
             move = moves[0]
-        elif self._mycolor == self._board._BLACK and self._firstCoup:
+        elif self._1Move:
             print("First Move")
-            move = self._board.str_to_move(choice(self._openerCoup))
+            move = self._board.str_to_move(choice(self._1openerMove))
             while(move not in moves):
-                move = self._board.str_to_move(choice(self._openerCoup))
-            self._firstCoup = False
+                move = self._board.str_to_move(choice(self._1openerMove))
+            self._1Move = False
+        elif self._2Move:
+            print("Second Move")
+            move = self._board.str_to_move(choice(self._2openerMove))
+            while(move not in moves):
+                move = self._board.str_to_move(choice(self._2openerMove))
+            self._2Move = False
+        elif self._3Move:
+            print("Third Move")
+            move = self._board.str_to_move(choice(self._3openerMove))
+            while(move not in moves):
+                move = self._board.str_to_move(choice(self._3openerMove))
+            self._3Move = False
+        elif self._4Move:
+            print("Fourth Move")
+            move = self._board.str_to_move(choice(self._4openerMove))
+            while(move not in moves):
+                move = self._board.str_to_move(choice(self._4openerMove))
+            self._4Move = False
+        elif(self._maxTime - self._time <= 1):
+            move = choice(moves) 
         else:
+            print(self._time)
             print("AlphaBeta")
-            # value = 0
-            # for i in range (0,10000):
-            #     testCopy = copy.deepcopy(self._board)
-            #     self.weakDeroulementRandom(testCopy, self._mycolor, value)
-            # value = value / 10000
-            # print(value)
-            if self._mycolor == self._board._BLACK:
-                move = self.minimaxAB(self._board, False)
-            else: 
-                move = self.minimaxAB(self._board, True)
+            moves = self.AlphaBeta(self._coeff)
+            move = random.choice(moves)
+            # move = self.AlphaBeta()
+        if(self._maxTime - self._time <= 1):
+            move = choice(moves) 
         self._board.push(move)
+        self._nbmoves += 1;
         # New here: allows to consider internal representations of moves
         print("I am playing ", self._board.move_to_str(move))
         print("My current board :")
@@ -178,6 +235,7 @@ class myPlayer(PlayerInterface):
     def newGame(self, color):
         self._mycolor = color
         self._opponent = Goban.Board.flip(color)
+        self._launchTime = time.time()
 
     def endGame(self, winner):
         if self._mycolor == winner:
