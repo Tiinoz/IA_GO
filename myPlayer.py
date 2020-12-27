@@ -26,11 +26,11 @@ class myPlayer(PlayerInterface):
     def __init__(self):
         self._board = Goban.Board()
         self._mycolor = None
-        self._bestMove = -1
-        self._firstCoup = True
+
         self._launchTime = 0
         self._time = 0
         self._maxTime = 300
+
         self._1Move = True
         self._2Move = True
         self._3Move = True
@@ -46,14 +46,6 @@ class myPlayer(PlayerInterface):
         self._nbmoves = 0
         self._coeff = 3
         
-
-
-    # ALPHA BETA TEST
-    def getOpponentColor(self):
-        if self._mycolor == self._board._BLACK:
-            return self._board._WHITE
-        else:
-            return self._board._BLACK
 
     def scoreIsOver(self):
         board_value = 0
@@ -176,7 +168,7 @@ class myPlayer(PlayerInterface):
         if self._mycolor == self._board._BLACK:
             return "Lucas trop nul au GO"
         else:
-            return "EnzoBG le pro du GO"
+            return "Enzo le pro du GO"
 
     def getPlayerMove(self):
         sys.stdout = sys.__stdout__
@@ -220,7 +212,7 @@ class myPlayer(PlayerInterface):
             move = choice(moves) 
         else:
             print(self._time)
-            print("AlphaBeta")
+            print("AlphaBeta Move")
             moves = self.AlphaBeta(self._coeff)
             if(len(moves)>0):
                 move = self.choiceGo(moves)
