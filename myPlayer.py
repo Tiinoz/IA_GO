@@ -218,8 +218,6 @@ class myPlayer(PlayerInterface):
                 move = self.choiceGo(moves)
             else:
                 move = random.choice(moves)
-        if(self._maxTime - self._time <= 1):
-            move = choice(moves) 
         self._board.push(move)
         self._nbmoves += 1;
         # New here: allows to consider internal representations of moves
